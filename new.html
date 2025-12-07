@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🍔老爹汉堡店🍔</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: {
+          sans: ['Nunito', 'system-ui', 'sans-serif'],
+        },
+        extend: {
+          colors: {
+            primary: '#FF6B35',
+            secondary: '#FFD166',
+            tomato: '#E63946',
+            lettuce: '#2A9D8F',
+            dark: '#2B2B2B',
+          },
+          boxShadow: {
+            'game': '0 4px 0 rgba(0,0,0,0.2)',
+            'game-active': '0 2px 0 rgba(0,0,0,0.2)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    :root{
+      --bg:#f7f2e9; --panel:#fff; --ink:#2b2b2b; --muted:#777;
+      --pri:#ff7a00; --pri2:#ffad60; --good:#22aa66; --bad:#e74c3c; --gold:#e1b200;
+    }
+    *{box-sizing:border-box; user-select: none;}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+      color:var(--ink);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)),
+        url("background.jpg" )no-repeat center center fixed;
+      background-size:100% 100%;
+      overflow-x: hidden;
+    }
+
+    header{position:sticky;top:0;background:rgba(255,255,255,0.9);backdrop-filter:blur(6px);border-bottom:1px solid #0001; z-index: 10;}
+    .wrap{max-width:1200px;margin:0 auto;padding:12px 16px}
+    h1{margin:0;font-size:20px;font-weight:900;letter-spacing:.5px}
+    .sub{font-size:12px;color:var(--muted)}
+    
+    .hud{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+    .tag{background:#2B2B2B; color:#fff; border-radius:12px; padding:4px 10px; font-size:13px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    .gold{background:var(--gold); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.2);}
+    
+    .btn{
+      border:none;border-radius:12px;padding:8px 16px;
+      background:var(--pri);color:#fff;
+      cursor:pointer;font-weight:800;
+      box-shadow: 0 4px 0 #c45d00;
+      transition: all 0.1s;
+      transform: translateY(0);
+    }
+    .btn:active{transform:translateY(4px); box-shadow: 0 0 0 #c45d00;}
+    .btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+    .row{display:grid;grid-template-columns:280px 1fr 320px;gap:14px}
+    @media (max-width:1000px){ .row{grid-template-columns:1fr} }
+    
+    .orders, .board, .serve{
+      background:var(--panel);border-radius:16px;padding:16px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    .order-card{border:2px dashed #e5e7eb; border-radius:12px; padding:10px; margin-bottom:10px; background:#fff; cursor:pointer; transition: transform 0.2s;}
+    .order-card:hover { transform: scale(1.02); }
+    .order-card.active{ border-style:solid; border-color:#ff7a00; background: #fff8f0; }
+    .order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .order-ing{display:flex;flex-wrap:wrap;gap:4px}
+    .pill{border-radius:99px;padding:2px 8px;font-size:11px;border:1px solid #0001;background:#fafafa; color:#555;}
+    .timer{font-variant-numeric:tabular-nums;font-weight:800; color: var(--tomato);}
+    
+    .tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+    .tab{
+      padding:8px 16px;border-radius:12px;border:2px solid transparent;background:#f0f0f0;cursor:pointer;
+      font-weight: 700; color: #666; transition: all 0.2s;
+    }
+    .tab:hover { background: #e5e5e5; }
+    .tab.on{background:var(--secondary); color:#5d4037; box-shadow: 0 3px 0 #e0b040; transform: translateY(-2px);}
+    
+    .station{display:none; animation: fadeIn 0.3s ease;}
+    .station.on{display:block}
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+    .card{
+      border:2px solid #f0f0f0;border-radius:14px;background:#fff;padding:10px;text-align:center;
+      box-shadow:0 4px 10px rgba(0,0,0,0.03);
+      transition: all 0.2s;
+    }
+    .card:hover { border-color: var(--pri2); }
+    
+    .plate{
+      margin-top:8px;height:280px;border-radius:14px;
+      border:3px dashed #ddd; display:flex;
+      align-items:flex-end;justify-content:center;
+      background:repeating-linear-gradient(45deg,#fafafa,#fafafa 10px,#f4f4f4 10px,#f4f4f4 20px);
+    }
+    .stack{position:relative;width:220px;min-height:44px;display:flex;flex-direction:column-reverse;align-items:center;gap:-5px;padding-bottom:10px}
+    
+    .score{font-size:32px;font-weight:900; color: var(--pri);}
+    .log{max-height:280px;overflow:auto;border:1px solid #eee;border-radius:10px;padding:8px;background:#f9f9f9}
+    .line{font-size:12px;color:#555;margin:4px 0; border-bottom: 1px dashed #eee; padding-bottom: 2px;}
+
+    .ing{
+      padding:6px 14px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);
+      display:inline-flex;gap:6px;align-items:center;background:#fff;
+      font-weight: 700; font-size: 13px;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+    }
+    .i-bun-top{background:#f8d28c; border-color: #e0b060;}
+    .i-bun-bot{background:#efc577; border-color: #d0a050;}
+    .i-patty{background:#7c4736;color:#fff; border-color: #5c3020;}
+    .i-cheese{background:#ffd63c; border-color: #e0c030;}
+    .i-lettuce{background:#b5e27b; border-color: #95c060;}
+    .i-tomato{background:#ff8a8a; border-color: #e07070;}
+    .i-onion{background:#e8d7ff; border-color: #c0b0e0;}
+    .i-pickle{background:#a6e388; border-color: #80c060;}
+    .i-sauce{background:#ffe4c4; border-color: #e0c0a0;}
+    
+    .drag{cursor:grab}
+    .drag:active{cursor:grabbing; transform: scale(0.95);}
+    
+    .bar{height:12px;background:#eee;border-radius:99px;overflow:hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);}
+    .bar>span{display:block;height:100%;background:linear-gradient(90deg,#2ecc71,#f1c40f,#e67e22,#e74c3c); transition: width 0.3s ease;}
+
+    .grill-progress {
+      height:12px; background:#eee; border-radius:99px; overflow:hidden; margin:8px 0;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .grill-progress > span {
+      display:block; height:100%; transition: width 0.1s linear, background 0.3s;
+    }
+    
+    .grill-btn {
+      font-size: 12px; padding: 4px 8px; border-radius: 8px; cursor: pointer;
+      border: 1px solid #ddd; background: #fff; box-shadow: 0 2px 0 #ddd;
+    }
+    .grill-btn:active { transform: translateY(2px); box-shadow: none; }
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* --- 视觉特效 CSS --- */
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+    }
+    .float-text {
+      position: fixed; pointer-events: none; z-index: 10000;
+      font-weight: 900; font-size: 24px;
+      text-shadow: 2px 2px 0px #fff;
+      animation: floatUp 1s ease-out forwards;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .shake-screen { animation: shake 0.5s; }
+
+    /* --- 商店 CSS --- */
+    .shop-card {
+        border: 2px solid #f0f0f0; border-radius: 12px;
+        padding: 10px;
+        background: #fff; text-align: center; transition: all 0.2s;
+        display: flex; flex-direction: column; justify-content: space-between;
+        height: 100%;
+        position: relative; 
+    }
+    .shop-card h3 { font-size: 16px; margin: 4px 0; }
+    .shop-card p { font-size: 12px; line-height: 1.2; min-height: 30px; color: #666; }
+    .shop-card:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.05); border-color: #FF6B35; }
+    .shop-card.owned { border-color: #22c55e; background: #f0fdf4; opacity: 0.9; }
+    .shop-icon { font-size: 32px; margin-bottom: 4px; display: inline-block; }
+
+    
+    .order-conter{
+      position:fixed;
+      bottom:30px;
+      right:30px;
+      z-index: 5;
+      width:300px;
+      height:auto;
+    }
+    .oeder-conter-img{
+      width:100%;
+      height:auto;
+    }
+    .cashier{
+      position:fixed;
+      bottom:40px;
+      right:40px;
+      z-index: 4;
+      width:200px;
+      height:auto;
+    }
+    .cashier-img{
+      width:100%;
+      height:auto;
+      transform:scaleX(-1);
+    }
+        .grill-btn:active { transform: translateY(2px); box-shadow: none; }
+    .hint{font-size:12px;color:var(--muted)}
+
+    /* --- 团队成员展示样式 --- */
+.team-display {
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.05);
+  margin-top: 20px;
+  width: 100%;
+  grid-column: 1 / -1; /* 跨越所有列 */
+}
+
+.team-display h3 {
+  font-size: 18px;
+  font-weight: 900;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 关键修改：确保水平排列，每排3个 */
+#teamGrid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 团队成员卡片样式 */
+.team-member-card {
+  border: 2px solid #f0f0f0;
+  border-radius: 14px;
+  padding: 16px;
+  background: #fff;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+  min-height: 180px;
+  box-sizing: border-box;
+}
+
+.team-member-card.owned {
+  border-color: #22c55e;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.team-member-image {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  border: 3px solid #22c55e;
+}
+
+.team-member-name {
+  font-weight: 800;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 4px;
+  width: 100%;
+  word-break: keep-all;
+}
+
+.team-member-desc {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  width: 100%;
+  min-height: 16px;
+}
+
+.team-member-skill {
+  font-size: 11px;
+  background: #22c55e;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-top: auto;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  #teamGrid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #teamGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .team-member-card {
+    min-height: 170px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  #teamGrid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .team-display {
+    padding: 16px;
+  }
+}
+/* 修复商店按钮内图标和文字对齐问题 */
+#btnOpenShop {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+}
+
+/* 确保图标垂直居中 */
+#btnOpenShop .iconify {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    vertical-align: middle !important;
+}
+    /* --- 视觉特效 CSS --- */
+    
+    </style>
+</head>
+
+<body class="bg-orange-50 p-8 flex flex-wrap justify-center min-h-screen">
+
+  <div id="shopTooltip" class="fixed z-[100] pointer-events-none transition-opacity duration-200 opacity-0 bg-gray-900/95 text-white p-4 rounded-xl shadow-2xl border border-white/10 max-w-[280px] backdrop-blur-sm" style="left:0; top:0;">
+      <div id="tipTitle" class="font-black text-lg text-secondary mb-1"></div>
+      <div id="tipSkill" class="text-xs font-bold text-primary mb-2 bg-orange-900/30 px-2 py-1 rounded inline-block"></div>
+      <div id="tipEffect" class="text-sm font-bold mb-2 leading-snug"></div>
+      <div id="tipFlavor" class="text-xs text-gray-400 italic border-t border-gray-700 pt-2 mt-2"></div>
+  </div>
+
+  <div id="audio-controls" style="display:none;">
+    <audio id="bgm-start" loop autoplay><source src="start.mp3" type="audio/mpeg"></audio>
+    <audio id="bgm-game" loop><source src="game.mp3" type="audio/mpeg"></audio>
+    <audio id="bgm-end" ><source src="end.mp3" type="audio/mpeg"></audio>
+    <audio id="bgm-shop" loop><source src="shop.mp3" type="audio/mpeg"></audio>
+  </div>
+  
+  <div id="click-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:pointer; backdrop-filter: blur(5px);">
+    <div style="background:#fff; padding:20px 40px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.2); text-align:center; animation: bounce 1s infinite alternate;">
+      <span class="iconify" data-icon="mdi:hand-pointing-up" style="font-size:40px; color:#FF6B35;"></span>
+      <h3 style="margin:10px 0 0; color:#333; font-weight:900;">点击屏幕开启声音</h3>
+    </div>
+  </div>
+
+  <div id="startPage" class="w-[375px] md:w-[500px] lg:w-[600px] h-auto bg-white rounded-3xl border-4 border-orange-200 shadow-2xl m-4 relative overflow-hidden transform hover:scale-[1.01] transition-transform duration-500">
+    <div class="h-24 bg-gradient-to-r from-primary to-orange-400 flex items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/food.png')] opacity-20"></div>
+        <h1 class="text-4xl font-black text-white drop-shadow-md tracking-wider">Papa's Burgeria</h1>
+    </div>
+    <div class="flex flex-col items-center p-8 relative">
+      <div class="w-56 md:w-64 mx-auto mt-4 mb-8">
+        <img id="1" class="w-full h-auto drop-shadow-xl hover:rotate-3 transition-transform duration-300"
+             src="./老爹图片/laodie.gif"
+             onerror="this.src='https://cdn-icons-png.flaticon.com/512/3075/3075977.png'" 
+             alt="Chef character" />
+      </div>
+      <button id="startGameBtn" class="w-64 h-16 bg-primary hover:bg-orange-600 rounded-2xl text-white text-2xl font-black mb-6 shadow-game hover:translate-y-[-2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2">
+        <span class="iconify" data-icon="mdi:play" data-width="32"></span> 开始游戏
+      </button>
+      <button id="showInstruction" class="w-52 h-12 bg-secondary hover:bg-yellow-400 rounded-xl text-orange-900 font-bold mb-4 shadow-game-active active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2">
+        <span class="iconify" data-icon="mdi:book-open-page-variant" data-width="20"></span> 游戏说明
+      </button>
+    </div>
+    <div class="bg-orange-50 p-3 text-center border-t border-orange-100">
+        <p class="text-orange-300 text-xs font-bold">© 2025 Papa's Burgeria Remastered</p>
+    </div>
+
+    <div id="instructionModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" style="display:none;">
+      <div class="bg-white rounded-3xl border-4 border-orange-300 shadow-2xl w-[90%] md:w-[500px] max-h-[80vh] relative overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+        <button id="closeInstruction" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 text-red-500 flex items-center justify-center transition-all z-10">
+          <span class="iconify" data-icon="mdi:close" data-width="20"></span>
+        </button>
+        <div class="h-16 bg-secondary flex items-center justify-center">
+          <h3 class="text-xl font-black text-orange-900 flex items-center gap-2"><span class="iconify" data-icon="mdi:school" data-width="24"></span> 新手教程</h3>
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[calc(80vh-64px)] space-y-4">
+            <div class="flex gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div class="bg-white p-2 rounded-lg h-fit shadow-sm"><span class="iconify text-primary" data-icon="mdi:grill" data-width="24"></span></div>
+              <div><strong class="text-primary block mb-1">1. 烤肉台</strong><span class="text-sm text-gray-600 leading-relaxed">点击【下肉饼】，观察指针。<br><span class="text-blue-500 font-bold">蓝色</span>=生，<span class="text-green-500 font-bold">绿色</span>=翻面，<span class="text-orange-500 font-bold">橙色</span>=熟。</span></div>
+            </div>
+            <div class="flex gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div class="bg-white p-2 rounded-lg h-fit shadow-sm"><span class="iconify text-primary" data-icon="mdi:hamburger" data-width="24"></span></div>
+              <div><strong class="text-primary block mb-1">2. 组装台</strong><span class="text-sm text-gray-600 leading-relaxed">必须：<span class="bg-yellow-200 px-1 rounded">面包底</span> → 食材 → <span class="bg-yellow-200 px-1 rounded">面包顶</span>。</span></div>
+            </div>
+            <div class="flex gap-3 p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div class="bg-white p-2 rounded-lg h-fit shadow-sm"><span class="iconify text-primary" data-icon="mdi:alarm" data-width="24"></span></div>
+              <div><strong class="text-primary block mb-1">3. 时间与评分</strong><span class="text-sm text-gray-600 leading-relaxed">营业时间为动态计算，尽可能多地完成订单！</span></div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shopPage" class="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50" style="display:none;">
+    <div class="bg-white rounded-3xl border-4 border-orange-300 shadow-2xl w-[90%] md:w-[700px] h-auto max-h-[90vh] relative overflow-hidden flex flex-col animate-[fadeIn_0.3s_ease-out]">
+        <div class="bg-primary p-4 flex justify-between items-center shrink-0">
+            <h2 class="text-2xl font-black text-white flex items-center gap-2">
+                <span class="iconify" data-icon="mdi:account-group"></span> 团队商店
+            </h2>
+            <div class="bg-black/20 rounded-full px-4 py-1 text-white font-bold flex items-center gap-1">
+                <span class="iconify" data-icon="mdi:currency-usd"></span> <span id="shopCoins">0</span>
+            </div>
+        </div>
+        <div class="p-6 overflow-y-auto grow bg-orange-50">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="shopGrid"></div>
+        </div>
+        <div class="p-4 bg-white border-t border-orange-100 flex justify-center shrink-0">
+            <button id="closeShopBtn" class="btn bg-gray-600 hover:bg-gray-700 w-full md:w-auto min-w-[200px]">返回结算</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="gamePage" style="display:none; width:100%;">
+    <header>
+      <div class="wrap">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+             <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+                <span class="iconify" data-icon="mdi:chef-hat" data-width="24"></span>
+             </div>
+             <div>
+                <h1 class="text-gray-800">老爹汉堡店 <span class="text-primary text-sm bg-orange-100 px-2 py-0.5 rounded-full">营业中</span></h1>
+                <div class="sub">拖拽食材，完美复刻订单！</div>
+             </div>
+          </div>
+          <div class="hud">
+            <span class="tag gold flex items-center gap-1"><span class="iconify" data-icon="mdi:currency-usd"></span> <b id="coins">0</b></span>
+            <span class="tag bg-orange-600 flex items-center gap-1"><span class="iconify" data-icon="mdi:fire"></span> <b id="combo">0</b>x</span>
+            <span class="tag bg-blue-500 flex items-center gap-1"><span class="iconify" data-icon="mdi:calendar-blank"></span> 第 <b id="day">1</b> 天</span>
+            
+            <button id="btnNextDay" class="btn bg-green-500 hover:bg-green-600 shadow-[0_4px_0_#15803d] active:shadow-none active:translate-y-[4px]">开始营业</button>
+            <button id="btnEndDay" class="btn bg-gray-700 hover:bg-gray-800 shadow-[0_4px_0_#1f2937] active:shadow-none active:translate-y-[4px]">今日结算</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap" style="margin-top:20px">
+      <div class="row">
+        <section class="orders">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px; border-bottom:1px solid #eee; padding-bottom:8px;">
+            <h3 class="font-black text-lg flex items-center gap-2"><span class="iconify text-primary" data-icon="mdi:receipt-text"></span> 订单队列</h3>
+            <span class="hint bg-gray-100 px-2 py-1 rounded">无限接单模式</span>
+          </div>
+          <div id="orderList" class="min-h-[100px] max-h-[500px] overflow-y-auto pr-1">
+             <div class="text-center text-gray-300 py-8 text-sm">等待新顾客，点击上方“开始”</div>
+          </div>
+        </section>
+
+        <section class="board">
+          <div class="tabs">
+            <button class="tab on" data-tab="grill">① 烤肉台</button>
+            <button class="tab" data-tab="build">② 组装台</button>
+            <div class="order-conter">
+              <img src="table.png" alt="点餐台" class="order-conter-image">
+            </div>
+            <div class="cashier">
+              <img src="./老爹图片/laodie.gif" alt="收银员" class="cashier-img">
+            </div>
+          </div>
+
+          <div class="station on" id="grill">
+            <div class="grid" id="grillGrid"></div>
+            <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 mt-4 flex items-center gap-3">
+               <span class="iconify text-primary text-2xl" data-icon="mdi:information"></span>
+               <div class="text-xs text-gray-600">
+                  <span class="font-bold text-primary">技巧：</span> 绿色区域翻面，金色区域起锅。
+                  <br>完美时间：<b class="text-green-600">7.0～8.5</b> 秒。
+               </div>
+            </div>
+          </div>
+
+          <div class="station" id="build">
+            <div class="grid" id="ingPool" style="margin-bottom:16px"></div>
+            <div class="plate shadow-inner">
+              <div id="stack" class="stack"></div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:16px">
+              <div class="hint text-gray-400">← 拖拽食材堆叠</div>
+              <div class="right flex gap-2">
+                <button id="btnClear" class="tab text-red-500 hover:bg-red-50 hover:text-red-600">
+                    <span class="iconify inline mb-1" data-icon="mdi:trash-can-outline"></span> 清空
+                </button>
+                <button id="btnServe" class="btn flex items-center gap-2 pl-4 pr-4">
+                    出餐 <span class="iconify" data-icon="mdi:bell-ring"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="serve">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <h3 class="font-black text-lg">⭐ 本单评分</h3>
+            <span class="small bg-gray-100 px-2 py-1 rounded text-gray-500">倒计时: <b id="levelTimer" class="text-red-600 text-lg">180</b>s</span>
+          </div>
+          
+          <div class="text-center py-4 bg-gray-50 rounded-xl mb-4 border border-gray-100">
+             <div class="score" id="score">0</div>
+             <div class="text-xs text-gray-400 uppercase tracking-widest font-bold">Score</div>
+          </div>
+          
+          <div class="bar mb-2"><span id="scoreBar" style="width:0%"></span></div>
+          <div class="small text-center text-gray-500 mb-4" id="detail">等待出餐...</div>
+
+          <h4 class="font-bold text-sm text-gray-400 border-b border-gray-100 pb-2 mb-2">📜 历史记录</h4>
+          <div class="log hide-scrollbar" id="log"></div>
+        </section>
+         <!-- 在这里添加团队展示 -->
+        <section class="team-display">
+          <h3 class="font-black text-lg flex items-center gap-2 mb-4">
+            <span class="iconify text-primary" data-icon="mdi:account-group"></span> 团队成员
+          </h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3" id="teamGrid">
+            <!-- 这里会动态显示已招募的团队成员 -->
+          </div>
+        </section>
+
+   
+
+        
+      </div>
+    </main>
+  </div>
+
+  <div id="endPage" class="w-[375px] md:w-[600px] lg:w-[800px] h-auto bg-white rounded-3xl border-4 border-orange-200 shadow-2xl m-4 relative overflow-hidden animate-[fadeIn_0.5s_ease-out]" style="display:none;">
+    <div class="h-28 flex items-center justify-center relative bg-gradient-to-r from-orange-50 to-white overflow-hidden">
+      <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30"></div>
+      <div class="z-10 text-center">
+          <h2 class="text-3xl md:text-4xl font-black text-primary drop-shadow-sm">今日营业结束</h2>
+          <div class="h-1.5 w-24 bg-primary rounded-full mx-auto mt-2"></div>
+      </div>
+    </div>
+    <div class="px-6 md:px-12 py-6 overflow-y-auto hide-scrollbar">
+      <div class="bg-gradient-to-br from-orange-50 to-white rounded-2xl p-6 shadow-sm border border-orange-100 mb-6">
+        <div class="grid grid-cols-2 gap-6">
+          <div class="bg-white rounded-xl p-4 border border-orange-100 shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2"><span class="iconify text-blue-500" data-icon="mdi:account-group" data-width="28"></span></div>
+            <div class="text-4xl font-black text-gray-800" id="endCustomers">0</div>
+            <div class="text-sm font-bold text-gray-400 mt-1">总服务顾客数</div>
+          </div>
+          <div class="bg-white rounded-xl p-4 border border-orange-100 shadow-sm flex flex-col items-center justify-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mb-2"><span class="iconify text-yellow-600" data-icon="mdi:currency-usd" data-width="28"></span></div>
+            <div class="text-4xl font-black text-gray-800" id="endCoins">$0</div>
+            <div class="text-sm font-bold text-gray-400 mt-1">总收入</div>
+          </div>
+        </div>
+        <div class="mt-6">
+          <div class="flex justify-between mb-2">
+            <span class="text-sm font-bold text-gray-600">顾客满意度</span>
+            <span class="text-sm font-bold text-primary" id="endSatisfaction">0%</span>
+          </div>
+          <div class="w-full h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+            <div class="h-full bg-gradient-to-r from-primary to-yellow-400 rounded-full transition-all duration-1000 ease-out" id="endSatisfactionBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 mb-2">
+        <button id="btnOpenShop" class="h-16 bg-blue-500 hover:bg-blue-600 rounded-2xl font-black text-white text-lg shadow-game-active hover:-translate-y-1 transition-all flex items-center justify-center gap-2" style="display: none;">
+          <span class="iconify" data-icon="mdi:shopping" data-width="24"></span> 商店
+        </button>
+        <button id="btnContinue" class="col-span-2 h-16 bg-secondary hover:bg-yellow-400 rounded-2xl font-black text-orange-900 text-lg shadow-game-active hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+          <span class="iconify" data-icon="mdi:play-circle" data-width="24"></span> 继续下一天
+        </button>
+      </div>
+      <div class="mt-4 flex justify-center">
+          <button id="btnExit" class="text-gray-400 hover:text-tomato text-sm font-bold flex items-center gap-1 transition-colors">
+            <span class="iconify" data-icon="mdi:exit-to-app" data-width="16"></span> 重置游戏
+          </button>
+      </div>
+    </div>
+    <div class="bg-gray-50 border-t border-gray-100 p-4 text-center">
+      <p class="text-primary font-bold mb-1" id="endMessage">做得不错！</p>
+    </div>
+  </div>
+
+  <script>
+    const INGREDIENTS = [
+      ["bun-bottom","面包底","i-bun-bot","🫓", true],
+      ["patty","牛肉饼","i-patty","🥩", false],
+      ["cheese","芝士","i-cheese","🧀", false],
+      ["lettuce","生菜","i-lettuce","🥬", false],
+      ["tomato","番茄","i-tomato","🍅", false],
+      ["onion","洋葱","i-onion","🧅", false],
+      ["pickle","酸黄瓜","i-pickle","🥒", false],
+      ["sauce","酱料","i-sauce","🧂", false],
+      ["bun-top","面包顶","i-bun-top","🍞", true],
+    ];
+
+    const COOK_IDEAL = [7.0, 8.5];
+    let COOK_MAX = 12.0; 
+    const QUEUE_MAX = 99; 
+    
+    const BASE_ORDER_TIME = 15; 
+    const EXTRA_DAY_TIME = 5;  
+// 强制设置第0天显示
+function setDayZero() {
+    day = 1;
+    updateHUD(); // 更新所有显示
+}
+    let day = 0, coins = 0, combo = 0;
+    let isShopOpen = false;
+    let levelTimeLeft = 0; 
+    let levelTimerInterval = null;
+    let SLOTS = 6; 
+    // 添加缓冲期相关变量
+let isBufferPeriod = false; // 是否处于缓冲期
+let bufferTimer = 0; // 缓冲期倒计时（秒），设为0则为手动开始
+    // 价格已大幅降低，Day 3 可购买
+    let upgrades = {
+        tianyurong: { 
+            id: 'tianyurong', name: '甜芋绒', 
+            desc: '心态担当',
+            skill: '技能：甜美治愈',
+            effect: '效果：顾客耐心值增加 20% (顾客更不容易生气)。',
+            flavor: '“甜芋绒的声音太温柔了，顾客光是听着就不舍得生气走人。”',
+            price: 30, owned: false, icon: 'mdi:heart-multiple' 
+        },
+        wanjiang: { 
+            id: 'wanjiang', name: '丸酱', 
+            desc: '防守担当',
+            skill: '技能：护肉使者',
+            effect: '效果：肉饼烤糊的时间判定延长 50% (手残党救星)。',
+            flavor: '“丸酱偷偷给肉饼刷了一层秘制酱料，怎么烤都不容易糊！”',
+            price: 40, owned: false, icon: 'mdi:shield-check' 
+        },
+        cuiyuankao: { 
+            id: 'cuiyuankao', name: '脆圆烤', 
+            desc: '火力担当',
+            skill: '技能：急急国王',
+            effect: '效果：烤肉速度提升 25% (肉熟得更快，适合高手刷单)。',
+            flavor: '“嫌火太小？脆圆烤直接把炉灶火力调到了最大！”',
+            price: 50, owned: false, icon: 'mdi:fire' 
+        },
+        luoke: { 
+            id: 'luoke', name: '洛可', 
+            desc: '管理担当',
+            skill: '技能：空间管理大师',
+            effect: '效果：烤肉位从 6 个增加到 8 个。',
+            flavor: '“洛可重新规划了厨房布局，现在能同时烤更多肉了！”',
+            price: 60, owned: false, icon: 'mdi:view-grid-plus' 
+        },
+        maoyuxia: { 
+            id: 'maoyuxia', name: '猫鱼虾', 
+            desc: '招财担当',
+            skill: '技能：招财猫体质',
+            effect: '效果：所有订单结算时，小费额外增加 20%。',
+            flavor: '“自带吸金光环，只要他在店里，顾客给钱都变大方了！”',
+            price: 70, owned: false, icon: 'mdi:cat' 
+        }
+    };
+
+    let state = {
+        ordersToSpawn: 0,
+        ordersSpawned: 0,
+        orderSchedulerTimeout: null 
+    };
+
+    const bgmStart = document.getElementById('bgm-start');
+    const bgmGame = document.getElementById('bgm-game');
+    const bgmEnd = document.getElementById('bgm-end');
+    const bgmShop = document.getElementById('bgm-shop'); 
+
+    // BGM 控制
+    function playMusic(scene) {
+        [bgmStart, bgmGame, bgmEnd, bgmShop].forEach(audio => {
+            if(audio) { audio.pause(); audio.currentTime = 0; }
+        });
+        let target = null;
+        if(scene === 'start') target = bgmStart;
+        if(scene === 'game') target = bgmGame;
+        if(scene === 'end') target = bgmEnd;
+        if(scene === 'shop') target = bgmShop; 
+        
+        if(target) {
+            target.volume = 0.4;
+            target.play().catch(e => console.log("需交互播放音乐"));
+        }
+    }
+
+    let dayStats = {
+      customersServed: 0,
+      totalCoins: 0,
+      satisfactionRate: 0,
+    };
+
+    let grill = new Array(SLOTS).fill(null); 
+    let lastFrame = performance.now();
+
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    function rnd(a,b){ return Math.random()*(b-a)+a }
+    function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]}
+    function formatSecs(x){ return (Math.round(x*10)/10).toFixed(1) }
+
+    function screenShake() {
+        document.body.classList.add('shake-screen');
+        setTimeout(() => document.body.classList.remove('shake-screen'), 500);
+    }
+
+    function showFloatingText(x, y, text, color="#22c55e") {
+        const el = document.createElement("div");
+        el.className = "float-text";
+        el.textContent = text;
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        el.style.color = color;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    }
+
+   function genOrder(){
+      const doublePattyChance = Math.min(0.8, Math.max(0, (day - 3) * 0.15));
+      const patties = Math.random() < doublePattyChance ? 2 : 1;
+      
+      const wants = ["bun-bottom"];
+      const layersPool = ["cheese","lettuce","tomato","onion","pickle","sauce"];
+      
+      const minLayers = Math.min(2, 1 + Math.floor(day / 5)); 
+      const maxLayers = Math.min(6, 3 + Math.floor(day / 3));
+      const layerCount = Math.floor(rnd(minLayers, maxLayers + 0.9));
+      
+      for(let i=0;i<layerCount;i++) wants.push(choice(layersPool));
+      for(let i=0;i<patties;i++){
+        const pos = Math.max(1, Math.floor(rnd(1, wants.length)));
+        wants.splice(pos,0,"patty");
+      }
+      wants.push("bun-top");
+      
+      const targetCook = choice(["三分偏生","五分适中","七分偏熟"]);
+      
+      let minTime = Math.max(25, 30 - day); 
+      let maxTime = Math.max(40, 55 - day);
+      
+      if(upgrades.tianyurong.owned) {
+          minTime *= 1.2;
+          maxTime *= 1.2;
+      }
+      
+      return {
+        id: Math.random().toString(36).slice(2,8).toUpperCase(),
+        wants,
+        targetCook,
+        timeLimit: Math.floor(rnd(minTime, maxTime)),
+        born: performance.now()
+      }
+  }
+
+
+    function cookScore(tSec, target){
+      const [L,R] = COOK_IDEAL;
+      let l=L, r=R;
+      if(target.includes("三分")){ l=L-1; r=L+0.5 }
+      if(target.includes("五分")){ l=L;   r=R }
+      if(target.includes("七分")){ l=R-0.5; r=R+1 }
+      const center=(l+r)/2, w=(r-l)/2;
+      const dist = Math.abs(tSec-center);
+      let s = Math.max(0, 1 - dist/(w*2));
+      if(tSec > COOK_MAX) s = 0;
+      return s;
+    }
+
+    function structureScore(need, got){
+      const n=need.length, m=got.length;
+      if(m===0) return 0;
+      const lenScore = Math.max(0, 1 - Math.abs(n-m)/n);
+      let match=0;
+      for(let i=0;i<Math.min(n,m);i++){
+        if(need[i]===got[i]) match++;
+      }
+      const orderScore = match/Math.max(n,m);
+      const hardFail = !(got.includes("bun-bottom") && got.includes("bun-top"));
+      return hardFail ? 0.1*orderScore*lenScore : 0.5*orderScore + 0.5*lenScore;
+    }
+    
+    function scheduleNextOrder(delayMs) {
+        if (state.ordersSpawned >= state.ordersToSpawn) return;
+        if (state.orderSchedulerTimeout) clearTimeout(state.orderSchedulerTimeout);
+
+        state.orderSchedulerTimeout = setTimeout(() => {
+            pushOrder();
+        }, delayMs);
+    }
+
+    const orderList = $("#orderList");
+    let orders = [];
+    let activeOrderIdx = 0;
+    
+    function pushOrder(){
+        if (state.ordersSpawned >= state.ordersToSpawn) return;
+        
+        const o = genOrder();
+        orders.push(o);
+        renderOrders();
+        state.ordersSpawned++;
+        
+        toast(`🔔 新订单 #${o.id} 来了！`);
+
+        if (state.ordersSpawned < state.ordersToSpawn) {
+            const speedFactor = Math.min(3000, day * 300); 
+            let nextDelay = Math.max(2000, 6000 - speedFactor);
+            nextDelay = rnd(nextDelay * 0.8, nextDelay * 1.2);
+            scheduleNextOrder(nextDelay);
+        }
+    }
+
+    function renderOrders(){
+      if(!orderList) return;
+      if(orders.length === 0) {
+        orderList.innerHTML = `<div class="text-center text-gray-400 py-6 text-sm italic">等待新顾客...</div>`;
+        return;
+      }
+      orderList.innerHTML = orders.map((o,idx)=>{
+        const pills = o.wants.map(w=>`<span class="pill">${labelOf(w)}</span>`).join("");
+        const left = Math.max(0, o.timeLimit - Math.floor((performance.now()-o.born)/1000));
+        return `
+          <div class="order-card ${idx===activeOrderIdx?'active':''}" data-oid="${o.id}" data-idx="${idx}">
+            <div class="order-top">
+              <div class="text-sm"><b>#${o.id}</b> <span class="text-xs text-gray-500">(${o.targetCook})</span></div>
+              <div class="timer ${left < 10 ? 'text-red-600 animate-pulse':''}">⏱ ${left}s</div>
+            </div>
+            <div class="order-ing">${pills}</div>
+          </div>
+        `
+      }).join("");
+    }
+
+    if(orderList){
+      orderList.addEventListener('click', (e)=>{
+        const card = e.target.closest('.order-card');
+        if(!card) return;
+        activeOrderIdx = Math.min(orders.length-1, Math.max(0, +card.dataset.idx));
+        renderOrders();
+      });
+    }
+
+    function labelOf(id){
+      const m = INGREDIENTS.find(x=>x[0]===id);
+      return m ? m[3] : id;
+    }
+
+    setInterval(()=>{
+      if(orders.length > 0){
+        orders = orders.filter(o=>{
+          const left = o.timeLimit - Math.floor((performance.now()-o.born)/1000);
+          if(left<=0){
+            logLine(`❌ 订单 #${o.id} 生气走人了（-5 金币）`);
+            coins = Math.max(0, coins-5);
+            combo = 0;
+            screenShake();
+            showFloatingText(window.innerWidth/2, window.innerHeight/2, "- $5", "#ef4444");
+            updateHUD();
+            return false;
+          }
+          return true;
+        });
+        if(activeOrderIdx >= orders.length) activeOrderIdx = Math.max(0, orders.length-1);
+        renderOrders();
+      }
+    }, 500);
+
+    const grillGrid = $("#grillGrid");
+    let grillElements = []; 
+    let lastRenderTime = 0;
+    const RENDER_INTERVAL = 100; 
+
+    function handlePutPatty(idx) {
+      if(!isShopOpen) {
+        toast("🚧 现在还没有营业 快点开始吧", "warning");
+        return;
+      }
+      if(!grill[idx]) {
+        grill[idx] = {state:"cooking", t:0};
+        toast(`🍖 烤盘${idx+1}放入肉饼`);
+        updateGrillSlot(idx);
+      } else {
+        toast(`❌ 烤盘${idx+1}已有肉饼`);
+      }
+    }
+
+    function handleFlipPatty(idx) {
+      if(grill[idx]?.state==="cooking") {
+        grill[idx].state="flipped";
+        toast(`🔄 烤盘${idx+1}肉饼翻面`);
+        updateGrillSlot(idx);
+      }
+    }
+
+    function handleDonePatty(idx) {
+      if(grill[idx] && (grill[idx].state==="flipped"||grill[idx].state==="done")) {
+        addCooked(grill[idx].t);
+        grill[idx] = null;
+        toast(`✅ 烤盘${idx+1}肉饼出锅`);
+        updateGrillSlot(idx);
+      }
+    }
+
+    function handleDumpPatty(idx) {
+      grill[idx] = null;
+      toast(`🗑 烤盘${idx+1}肉饼丢弃`);
+      updateGrillSlot(idx);
+    }
+
+    function initGrill(){
+      if(!grillGrid) return;
+      grillGrid.innerHTML = "";
+      
+      if(upgrades.luoke.owned) {
+          SLOTS = 8;
+      } else {
+          SLOTS = 6;
+      }
+      
+      if(grill.length !== SLOTS) {
+          grill = new Array(SLOTS).fill(null);
+      }
+      
+      grillElements = new Array(SLOTS).fill(null);
+
+      for(let i=0; i<SLOTS; i++) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.slot = i;
+        grillGrid.appendChild(card);
+        grillElements[i] = card;
+        updateGrillSlot(i);
+      }
+    }
+
+    function updateGrillSlot(idx) {
+      const card = grillElements[idx];
+      if(!card) return;
+      
+      const g = grill[idx];
+      let bar="0%", txt="<span class='text-gray-300'>空闲</span>", btnA, btnB;
+      let barColor = "#2ecc71";
+
+      if(g){
+        const t = g.t;
+        const pct = Math.min(100, Math.round(t/COOK_MAX*100));
+        bar = pct+"%";
+        
+        if(t < COOK_IDEAL[0]) barColor = "#3b82f6";
+        else if(t <= COOK_IDEAL[1]) barColor = "#22c55e";
+        else if(t <= COOK_MAX) barColor = "#eab308";
+        else barColor = "#ef4444";
+        
+        txt = `<span style="color:${barColor}; font-weight:bold;">${g.state==="cooking"?"煎烤中":g.state==="flipped"?"第2面":g.state==="done"?"完美":"糊了"}</span> · ${formatSecs(t)}s`;
+
+        if(g.state==="cooking") {
+          btnA = `<button class="tab grill-btn hover:bg-blue-50 text-blue-600 border-blue-200" data-action="flip">翻面</button>`;
+        } else if(g.state==="flipped" || g.state==="done") {
+          btnA = `<button class="btn grill-btn bg-green-500 text-white border-none shadow-sm hover:bg-green-600" data-action="done">起锅</button>`;
+        } else {
+          btnA = `<button class="tab ghost" disabled>—</button>`;
+        }
+        btnB = `<button class="tab grill-btn text-red-400 hover:text-red-600 hover:bg-red-50" data-action="dump">丢</button>`;
+      } else {
+        btnA = `<button class="tab grill-btn hover:bg-orange-50 text-primary border-orange-200 font-bold" data-action="put">下肉饼</button>`;
+        btnB = ``;
+      }
+
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center; margin-bottom:6px;">
+          <b class="text-sm">#${idx+1}</b>
+          <span class="small text-xs">${txt}</span>
+        </div>
+        <div class="grill-progress"><span style="width:${bar};background:${barColor}"></span></div>
+        <div style="display:flex;gap:4px;justify-content:flex-end; margin-top:8px;">${btnA}${btnB}</div>
+      `;
+
+      const buttons = card.querySelectorAll(".grill-btn");
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          const action = btn.dataset.action;
+          switch(action) {
+            case "put": handlePutPatty(idx); break;
+            case "flip": handleFlipPatty(idx); break;
+            case "done": handleDonePatty(idx); break;
+            case "dump": handleDumpPatty(idx); break;
+          }
+        });
+      });
+    }
+
+    function tick(now){
+      const dt = (now - lastFrame)/1000;
+      lastFrame = now;
+      
+      if(upgrades.wanjiang.owned) {
+          COOK_MAX = 18.0; 
+      } else {
+          COOK_MAX = 12.0;
+      }
+      
+      let speedMultiplier = upgrades.cuiyuankao.owned ? 1.25 : 1.0;
+
+      let needsUpdate = false;
+      for(let i=0;i<SLOTS;i++){
+        if(grill[i]){
+          grill[i].t += dt * speedMultiplier; 
+          needsUpdate = true;
+          if(grill[i].t > COOK_MAX && grill[i].state !== "burnt"){
+            grill[i].state = "burnt";
+            updateGrillSlot(i);
+            screenShake();
+            toast("🔥 糟糕！肉烤糊了！", "warning");
+          }else if(grill[i].state === "flipped" && grill[i].t >= COOK_IDEAL[0] && grill[i].t <= COOK_IDEAL[1]){
+            grill[i].state = "done";
+            updateGrillSlot(i);
+          }
+        }
+      }
+
+      if(needsUpdate && now - lastRenderTime > RENDER_INTERVAL) {
+        for(let i=0;i<SLOTS;i++){
+          if(grill[i] && grillElements[i]) {
+            const g = grill[i];
+            const progressBar = grillElements[i].querySelector('.grill-progress span');
+            const textSpan = grillElements[i].querySelector('.small');
+            if(progressBar) {
+               const pct = Math.min(100, Math.round(g.t/COOK_MAX*100));
+               let barColor = "#3b82f6";
+               if(g.t >= COOK_IDEAL[0] && g.t <= COOK_IDEAL[1]) barColor = "#22c55e";
+               else if(g.t > COOK_IDEAL[1] && g.t <= COOK_MAX) barColor = "#eab308";
+               else if(g.t > COOK_MAX) barColor = "#ef4444";
+
+               progressBar.style.width = pct + "%";
+               progressBar.style.background = barColor;
+            }
+            if(textSpan) {
+                textSpan.innerHTML = `<span style="font-weight:bold;">${g.state==="cooking"?"煎烤中":g.state==="flipped"?"第2面":g.state==="done"?"完美":"糊了"}</span> · ${formatSecs(g.t)}s`;
+            }
+          }
+        }
+        lastRenderTime = now;
+      }
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    let cookedBuff = [];
+    function addCooked(t){
+      cookedBuff.push({tSec:t});
+      toast(`✅ 出锅：${formatSecs(t)}s 肉饼`);
+      renderPool();
+    }
+
+    const ingPool = $("#ingPool");
+    const stack = $("#stack");
+
+    function ingHTML(id){
+      const d = INGREDIENTS.find(x=>x[0]===id);
+      return `<div class="ing drag ${d[2]} hover:scale-105 transition-transform" draggable="true" data-id="${id}">${d[3]} ${d[1]}</div>`;
+    }
+
+    function renderPool(){
+      if(!ingPool) return;
+      const basics = ["bun-bottom","cheese","lettuce","tomato","onion","pickle","sauce","bun-top"];
+      const cooked = cookedBuff.map((c,i)=>`<div class="ing drag i-patty hover:scale-105 transition-transform" draggable="true" data-id="patty" data-cook="${c.tSec}">🥩 牛肉饼 <span class="small ml-1 text-xs opacity-80">(${formatSecs(c.tSec)}s)</span></div>`);
+      ingPool.innerHTML = [...basics.map(ingHTML), ...cooked].map(x=>`<div class="flex justify-center">${x}</div>`).join("");
+    }
+    renderPool();
+
+    let dragData=null;
+    document.addEventListener("dragstart",(e)=>{
+      const el = e.target.closest(".drag"); if(!el) return;
+      dragData = { id:el.dataset.id, cook: el.dataset.cook? +el.dataset.cook : null, srcEl:el };
+    });
+    if(stack){
+      stack.addEventListener("dragover", e=> e.preventDefault());
+      stack.addEventListener("drop", e=>{
+        e.preventDefault(); if(!dragData) return;
+        addToStack(dragData.id, dragData.cook ?? null);
+        dragData=null;
+      });
+      stack.addEventListener("click", (e)=>{
+        const el = e.target.closest(".ing");
+        if(!el) return;
+        removeFromStack(el);
+      });
+    }
+
+    if(ingPool){
+      ingPool.addEventListener("click", (e)=>{
+        const el = e.target.closest(".drag");
+        if(!el) return;
+        addToStack(el.dataset.id, el.dataset.cook? +el.dataset.cook : null);
+      });
+    }
+
+    function classOf(id){ return (INGREDIENTS.find(x=>x[0]===id)||[])[2] || "" }
+    function nameOf(id){ return (INGREDIENTS.find(x=>x[0]===id)||[])[1] || id }
+    function emojiOf(id){ return (INGREDIENTS.find(x=>x[0]===id)||[])[3] || "🍔" }
+
+    function addToStack(id, cook){
+      if(!stack) return;
+      if(id!=="bun-bottom" && !stack.querySelector('[data-id="bun-bottom"]')){
+        toast("👇 请先放入面包底");
+        return;
+      }
+      if(id==="bun-top" && stack.querySelector('[data-id="bun-top"]')){
+        toast("⚠️ 面包顶只能一个");
+        return;
+      }
+      
+      const node = document.createElement("div");
+      node.className = `ing removable ${classOf(id)} animate-[fadeIn_0.2s_ease-out] cursor-pointer hover:brightness-110`;
+      node.dataset.id = id;
+      node.innerHTML = `${emojiOf(id)} ${nameOf(id)} ${cook?`<span class="small ml-1">(${formatSecs(cook)}s)</span>`:""}`;
+      stack.appendChild(node);
+
+      if(id==="patty" && cook!=null){
+        const k=cookedBuff.findIndex(x=>Math.abs(x.tSec-cook)<1e-6);
+        if(k>=0) cookedBuff.splice(k,1);
+        renderPool();
+      }
+    }
+
+    function removeFromStack(el){
+      el.remove();
+    }
+
+    const btnClear = $("#btnClear");
+    if(btnClear && stack){
+      btnClear.addEventListener("click", ()=>{
+        stack.innerHTML="";
+      });
+    }
+
+    const scoreEl = $("#score"), scoreBar=$("#scoreBar"), detail=$("#detail"), logEl=$("#log");
+
+    if($("#btnServe")){
+      $("#btnServe").addEventListener("click", (e)=>{
+        if(orders.length===0){ toast("👻 暂无订单～"); return; }
+        const cur = orders[activeOrderIdx];
+        if(!stack){ toast("请先组装汉堡"); return; }
+        const got = Array.from(stack.querySelectorAll(".ing")).map(el=>el.dataset.id);
+
+        if(!got.includes("bun-bottom")){ toast("🍞 需要面包底"); return; }
+        if(!got.includes("bun-top")){ toast("🍞 需要面包顶"); return; }
+        if(!got.includes("patty")){ toast("🥩 需要至少一个牛肉饼"); return; }
+
+        const sStruct = structureScore(cur.wants, got);
+        const patties=Array.from(stack.querySelectorAll('.ing[data-id="patty"]'))
+          .map(el=>{
+            const m = el.textContent.match(/\(([\d.]+)s\)/);
+            return m ? +m[1] : 0;
+          });
+        const target = cur.targetCook;
+        const cookScores = patties.map(t=>cookScore(t, target));
+        const sCook = cookScores.length? (cookScores.reduce((a,b)=>a+b,0)/cookScores.length) : 0.2;
+        const tUsed = Math.floor((performance.now()-cur.born)/1000);
+        const speed = Math.max(0, 1 - tUsed/cur.timeLimit);
+
+        let final = 100*(0.5*sStruct + 0.35*sCook + 0.15*speed);
+        final = Math.round(final);
+
+        if(final >= 90) {
+          confetti({
+              particleCount: 150,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#FF6B35', '#FFD166', '#2A9D8F'] 
+            });
+          toast("🎉 完美订单！太神了！", "warning"); 
+        } else if (final < 50) {
+            screenShake();
+        }
+
+        let gain = Math.round(final/15);
+        if(final>=80){ combo++; gain += combo; }
+        else if(final>=60){ combo = Math.max(0, combo); }
+        else combo = 0;
+        
+        if(upgrades.maoyuxia.owned) {
+            gain = Math.round(gain * 1.2);
+        }
+
+        coins += gain;
+        
+        if(e && e.clientX) {
+             showFloatingText(e.clientX, e.clientY - 50, `+ $${gain}`, "#eab308");
+        }
+
+        dayStats.customersServed++;
+        dayStats.totalCoins = coins;
+        dayStats.satisfactionRate = Math.min(100, Math.round((dayStats.customersServed / (dayStats.customersServed + 2)) * 100 + (final/10)));
+        
+        updateHUD();
+
+        if(scoreEl) scoreEl.textContent = final;
+        if(scoreBar){
+          scoreBar.style.width = Math.min(100, final)+"%";
+          scoreBar.style.background = final>=80 ? "#22c55e" : final>=60 ? "#eab308" : "#ef4444";
+        }
+        if(detail){
+            detail.innerHTML = `
+             <div class="grid grid-cols-3 gap-2 text-sm mt-2">
+                <div>结构 <b>${Math.round(sStruct*100)}</b></div>
+                <div>熟度 <b>${Math.round(sCook*100)}</b></div>
+                <div>速度 <b>${Math.round(speed*100)}</b></div>
+             </div>
+             <div class="mt-2 text-primary font-bold">+${gain} 金币</div>
+            `;
+        }
+        logLine(`💰 #${cur.id} 得分 ${final} (+${gain}$)`);
+
+        if(stack) stack.innerHTML="";
+        orders.splice(activeOrderIdx,1);
+        activeOrderIdx = Math.max(0, activeOrderIdx-1);
+        renderOrders();
+      });
+    }
+
+    function updateHUD(){
+      if($("#coins")) $("#coins").textContent = coins;
+      if($("#combo")) $("#combo").textContent = combo;
+      if($("#day")) $("#day").textContent = day;
+    }
+    function logLine(t){
+      if(!logEl) return;
+      const div=document.createElement("div");
+      div.className="line";
+      div.innerHTML = `<span class="text-gray-400 text-xs">[${new Date().toLocaleTimeString().slice(0,5)}]</span> ${t}`;
+      logEl.prepend(div);
+    }
+    
+    function toast(t, type="info"){
+      const el=document.createElement("div");
+      el.innerHTML = t;
+      const bg = type === 'warning' ? '#f59e0b' : '#333';
+      el.style.cssText=`position:fixed;left:50%;top:100px;transform:translateX(-50%) translateY(10px);background:${bg};color:#fff;padding:10px 20px;border-radius:50px;z-index:9999;opacity:0;transition:all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2)`;
+      document.body.appendChild(el);
+      requestAnimationFrame(()=>{ 
+          el.style.opacity=1;
+          el.style.transform="translateX(-50%) translateY(0)";
+      });
+      setTimeout(()=>{ 
+          el.style.opacity=0; 
+          el.style.transform="translateX(-50%) translateY(-10px)";
+          setTimeout(()=>el.remove(),300)
+      }, 1500);
+    }
+
+    const btnNextDay = $("#btnNextDay");
+    if(btnNextDay){
+      btnNextDay.addEventListener("click", ()=>{
+        startDay();
+      });
+    }
+// 更新营业状态按钮显示
+function updateBusinessButtons() {
+  const btnNextDay = document.getElementById('btnNextDay');
+  const btnEndDay = document.getElementById('btnEndDay');
+  
+  if (!btnNextDay || !btnEndDay) return;
+  
+  if (isShopOpen) {
+    // 营业中：显示结算按钮，隐藏开始营业按钮
+    btnNextDay.style.display = 'none';
+    btnEndDay.style.display = '';
+  } else {
+    // 非营业中：显示开始营业按钮，隐藏结算按钮
+    btnNextDay.style.display = '';
+    btnEndDay.style.display = 'none';
+  }
+}
+ function startDay(){
+  
+      isShopOpen = true; 
+      //day++; 
+  updateBusinessButtons();
+  // 如果从缓冲期开始，先结束缓冲期
+  if (isBufferPeriod) {
+    isBufferPeriod = false;
+    isShopOpen = true;
+    
+    // 更新按钮状态
+    if(btnNextDay) btnNextDay.style.display = "none";
+    if(btnEndDay) btnEndDay.style.display = "";
+    
+    // 清空缓冲期提示
+    const orderList = document.getElementById('orderList');
+    if (orderList) orderList.innerHTML = `<div class="text-center text-gray-300 py-8 text-sm">等待新顾客...</div>`;
+    
+    // 重置评分显示
+    const detail = document.getElementById('detail');
+    if(detail) detail.innerHTML = "等待出餐...";
+    
+    toast("🔔 第 " + day + " 天营业开始！");
+  } else {
+    // 原有逻辑（从游戏开始）
+    isShopOpen = true; 
+    day++;
+    
+    if(btnNextDay) btnNextDay.style.display = "none";
+    if(btnEndDay) btnEndDay.style.display = "";
+  }
+      if(btnNextDay) btnNextDay.style.display = "none";
+      
+      orders = [];
+      activeOrderIdx = 0;
+      cookedBuff = [];
+      
+      const scoreEl = document.getElementById("score");
+      const scoreBar = document.getElementById("scoreBar");
+      const detailEl = document.getElementById("detail");
+      const logEl = document.getElementById("log");
+      
+      if(scoreEl) scoreEl.textContent = "0";
+      if(scoreBar) { scoreBar.style.width = "0%"; scoreBar.style.background = "#eee"; }
+      if(detailEl) detailEl.innerHTML = "等待出餐...";
+      if(logEl) logEl.innerHTML = ""; 
+      
+      updateHUD(); 
+
+      let orderCount = 2 + day;
+      levelTimeLeft = (orderCount * BASE_ORDER_TIME) + EXTRA_DAY_TIME;
+      
+      updateTimerDisplay();
+      if(levelTimerInterval) clearInterval(levelTimerInterval);
+      levelTimerInterval = setInterval(timerTick, 1000);
+
+      state.ordersToSpawn = orderCount; 
+      state.ordersSpawned = 0; 
+      
+      if (state.orderSchedulerTimeout) clearTimeout(state.orderSchedulerTimeout);
+      
+      if (orderCount > 0) {
+        scheduleNextOrder(1000); 
+      }
+      
+      renderOrders();
+      initGrill(); 
+      renderPool();
+      
+      logLine(`📅 第 ${day} 天开张！`);
+      toast(`🔔 第 ${day} 天营业开始！(限时: ${levelTimeLeft}s)`);
+      
+    }
+
+    function timerTick() {
+      if(!isShopOpen) return;
+      levelTimeLeft--;
+      updateTimerDisplay();
+
+      if(levelTimeLeft <= 0) {
+        clearInterval(levelTimerInterval);
+        if (state.orderSchedulerTimeout) clearTimeout(state.orderSchedulerTimeout);
+        toast("⏰ 营业时间到！准备打烊！", "warning");
+        
+        setTimeout(() => {
+             $("#btnEndDay").click(); 
+        }, 1500);
+      }
+    }
+
+    function updateTimerDisplay() {
+      const el = $("#levelTimer");
+      if(el) {
+          el.textContent = levelTimeLeft;
+          if(levelTimeLeft <= 30) el.classList.add("animate-pulse");
+          else el.classList.remove("animate-pulse");
+      }
+    }
+
+    $$(".tab[data-tab]").forEach(b=>{
+      b.addEventListener("click", ()=>{
+        $$(".tab[data-tab]").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on");
+        const key=b.dataset.tab;
+        $$(".station").forEach(s=>s.classList.remove("on"));
+        const target = $("#"+key);
+        if(target) target.classList.add("on");
+        if(key === "grill") setTimeout(()=>initGrill(), 50);
+      });
+    });
+
+    const shopPage = document.getElementById('shopPage');
+    const shopGrid = document.getElementById('shopGrid');
+    const shopCoins = document.getElementById('shopCoins');
+    
+    function updateShopUI() {
+        if(!shopGrid) return;
+        shopCoins.textContent = coins;
+        
+        shopGrid.innerHTML = Object.values(upgrades).map(u => {
+            const btnClass = u.owned ? 'bg-gray-300 cursor-not-allowed' : (coins >= u.price ? 'bg-green-500 hover:bg-green-600 shadow-game-active hover:-translate-y-1' : 'bg-gray-300 cursor-not-allowed');
+            const btnText = u.owned ? '已招募' : `招募 $${u.price}`;
+            const clickAttr = (u.owned || coins < u.price) ? '' : `onclick="buyUpgrade('${u.id}')"`;
+            
+            return `
+            <div class="shop-card ${u.owned ? 'owned' : ''}" 
+                 onmouseenter="showTooltip(event, '${u.id}')" 
+                 onmousemove="moveTooltip(event)" 
+                 onmouseleave="hideTooltip()">
+                <div>
+                    <span class="iconify shop-icon ${u.owned?'text-green-500':'text-primary'}" data-icon="${u.icon}"></span>
+                    <h3 class="font-bold text-lg text-gray-800">${u.name}</h3>
+                    <p class="text-sm text-gray-500 mt-2 min-h-[30px] flex items-center justify-center">${u.desc}</p>
+                </div>
+                <button class="btn w-full mt-4 ${btnClass}" ${clickAttr}>${btnText}</button>
+            </div>
+            `;
+        }).join("");
+    }
+    
+    const shopTooltip = document.getElementById('shopTooltip');
+    const tipTitle = document.getElementById('tipTitle');
+    const tipSkill = document.getElementById('tipSkill');
+    const tipEffect = document.getElementById('tipEffect');
+    const tipFlavor = document.getElementById('tipFlavor');
+
+    window.showTooltip = function(e, id) {
+        const u = upgrades[id];
+        if(!u) return;
+
+        tipTitle.textContent = u.name;
+        tipSkill.textContent = u.skill;
+        tipEffect.textContent = u.effect;
+        tipFlavor.textContent = u.flavor;
+
+        shopTooltip.style.opacity = "1";
+        moveTooltip(e);
+    }
+    
+    window.moveTooltip = function(e) {
+        let x = e.clientX + 20;
+        let y = e.clientY + 20;
+        
+        if(x + 280 > window.innerWidth) x = e.clientX - 300;
+        if(y + 200 > window.innerHeight) y = e.clientY - 200;
+        
+        shopTooltip.style.left = x + "px";
+        shopTooltip.style.top = y + "px";
+    }
+    
+    window.hideTooltip = function() {
+        shopTooltip.style.opacity = "0";
+    }
+    
+    window.buyUpgrade = function(id) {
+        const u = upgrades[id];
+        if(!u || u.owned || coins < u.price) return;
+        
+        coins -= u.price;
+        u.owned = true;
+        
+        playMusic('game'); 
+        toast(`🎁 成功招募：${u.name}`);
+        updateShopUI();
+        updateHUD(); 
+    }
+
+    const startPage = document.getElementById('startPage');
+    const gamePage = document.getElementById('gamePage');
+    const endPage = document.getElementById('endPage');
+
+    const startGameBtn = document.getElementById('startGameBtn');
+    if(startGameBtn){
+      // 修改startGameBtn事件监听器中的调用
+
+      startGameBtn.addEventListener('click', ()=>{
+        startPage.style.display = 'none';
+        gamePage.style.display = 'block';
+        endPage.style.display = 'none';
+        shopPage.style.display = 'none';
+        playMusic('game'); 
+        setDayOne(); // 修改这里：从setDayZero改为setDayOne
+        setTimeout(()=>{ initGrill(); }, 300);
+        isShopOpen = false; 
+        updateBusinessButtons();
+        toast("👆 请点击上方“开始营业”按钮");
+});
+    }
+// 进入缓冲期
+function enterBufferPeriod() {
+  day++;
+  isBufferPeriod = true;
+  
+  // 清空所有订单
+  orders = [];
+  activeOrderIdx = 0;
+  cookedBuff = [];
+  grill = new Array(SLOTS).fill(null);
+  
+  // 停止所有计时器
+  clearInterval(levelTimerInterval);
+  if (state.orderSchedulerTimeout) {
+    clearTimeout(state.orderSchedulerTimeout);
+    state.orderSchedulerTimeout = null;
+  }
+  
+  // 重置订单生成状态
+  state.ordersToSpawn = 0;
+  state.ordersSpawned = 0;
+  
+  // 更新UI
+  updateBufferUI();
+  renderOrders();
+  initGrill();
+  renderPool();
+  
+  // 显示缓冲期提示
+  toast("📅 新的一天准备中... 准备好后点击'开始营业'", "warning");
+   updateHUD();
+}
+
+// 更新缓冲期UI
+function updateBufferUI() {
+  const btnNextDay = document.getElementById('btnNextDay');
+  const btnEndDay = document.getElementById('btnEndDay');
+  const orderList = document.getElementById('orderList');
+  
+  if (isBufferPeriod) {
+    // 修改按钮文字和状态
+    if (btnNextDay) {
+      btnNextDay.textContent = "开始营业";
+      btnNextDay.style.display = "";
+      btnNextDay.disabled = false;
+      btnNextDay.classList.remove("bg-gray-400");
+      btnNextDay.classList.add("bg-green-500", "hover:bg-green-600");
+    }
+    
+    if (btnEndDay) {
+      btnEndDay.style.display = "none";
+    }
+    
+    // 更新订单列表显示缓冲期信息
+    if (orderList) {
+      orderList.innerHTML = `
+        <div class="text-center py-8">
+          <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+            <span class="iconify text-blue-500 text-3xl" data-icon="mdi:coffee"></span>
+          </div>
+          <h3 class="text-lg font-bold text-gray-700 mb-2">营业准备时间</h3>
+          <p class="text-gray-500 text-sm mb-4">整理厨房，准备食材...</p>
+          <div class="bg-blue-50 border border-blue-100 rounded-lg p-3 max-w-sm mx-auto">
+            <div class="flex items-center gap-2 text-blue-700">
+              <span class="iconify" data-icon="mdi:information"></span>
+              <span class="text-sm">准备好后点击上方的 <span class="font-bold text-green-600">"开始营业"</span> 按钮</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // 更新组装台提示
+    const detail = document.getElementById('detail');
+    if (detail) {
+      detail.innerHTML = `
+        <div class="text-center text-gray-400">
+          <div class="text-sm mb-1">🛑 营业准备中</div>
+          <div class="text-xs">整理食材，检查设备...</div>
+        </div>
+      `;
+    }
+  }
+}
+    const btnEndDay = document.getElementById('btnEndDay');
+    if(btnEndDay){
+      
+      btnEndDay.addEventListener('click', ()=>{
+          clearInterval(levelTimerInterval); 
+    if (state.orderSchedulerTimeout)
+        clearInterval(state.orderSchedulerTimeout); 
+    isShopOpen = false;
+    updateBusinessButtons();
+    updateEndPageStats();
+        
+         
+        enterBufferPeriod();
+        
+        startPage.style.display = 'none';
+        gamePage.style.display = 'none';
+        endPage.style.display = 'block';
+        shopPage.style.display = 'none';
+        playMusic('end'); 
+       
+      });
+    }
+
+    const btnContinue = document.getElementById('btnContinue');
+if(btnContinue){
+  btnContinue.addEventListener('click', ()=>{
+    startPage.style.display = 'none';
+    gamePage.style.display = 'block';
+    endPage.style.display = 'none';
+    shopPage.style.display = 'none';
+    playMusic('game');
+    // 清空状态，但不增加天数
+    orders = [];
+    activeOrderIdx = 0;
+    cookedBuff = [];
+    grill = new Array(SLOTS).fill(null);
+    isShopOpen = false;
+    
+    // 更新UI
+    updateBusinessButtons();
+    renderOrders();
+    initGrill();
+    renderPool();
+    
+    // ★★★ 新增：更新按钮布局 ★★★
+    if (day >= 1) { // 现在进入的是第2天或之后
+        document.getElementById('btnOpenShop').style.display = 'block';
+        btnContinue.className = btnContinue.className.replace('col-span-3', 'col-span-2');
+    }
+  });
+}
+    
+    const btnOpenShop = document.getElementById('btnOpenShop');
+    const closeShopBtn = document.getElementById('closeShopBtn');
+    
+    if(btnOpenShop) {
+        btnOpenShop.addEventListener('click', ()=>{
+            updateShopUI();
+            shopPage.style.display = 'flex';
+            playMusic('shop'); // 播放商店音乐
+        });
+    }
+    if(closeShopBtn) {
+        closeShopBtn.addEventListener('click', ()=>{
+            shopPage.style.display = 'none';
+            playMusic('end'); // 回到结算音乐
+        });
+    }
+// ★★★ 新增：完全重置游戏函数 ★★★
+function resetGame() {
+   // 重置基础数据
+    day = 1; // 修改这里：从0改为1
+    coins = 0;
+    combo = 0;
+    isShopOpen = false;
+    levelTimeLeft = 0;
+    
+    // 重置每日统计数据
+    dayStats = {
+        customersServed: 0,
+        totalCoins: 0,
+        satisfactionRate: 0,
+    };
+    
+    // 重置订单相关
+    orders = [];
+    activeOrderIdx = 0;
+    cookedBuff = [];
+    grill = new Array(SLOTS).fill(null);
+    
+    // 重置订单生成状态
+    state = {
+        ordersToSpawn: 0,
+        ordersSpawned: 0,
+        orderSchedulerTimeout: null 
+    };
+    
+    // 重置所有团队成员
+    Object.values(upgrades).forEach(u => {
+        u.owned = false;
+    });
+    
+    // 重置游戏界面
+    if(stack) stack.innerHTML = "";
+    if(scoreEl) scoreEl.textContent = "0";
+    if(scoreBar) {
+        scoreBar.style.width = "0%";
+        scoreBar.style.background = "#eee";
+    }
+    if(detail) detail.innerHTML = "等待出餐...";
+    if(logEl) logEl.innerHTML = "";
+    
+    // 重置计时器
+    clearInterval(levelTimerInterval);
+    levelTimerInterval = null;
+    if (state.orderSchedulerTimeout) {
+        clearTimeout(state.orderSchedulerTimeout);
+        state.orderSchedulerTimeout = null;
+    }
+    
+    // 更新UI
+    updateHUD();
+    renderOrders();
+    initGrill();
+    renderPool();
+    updateTeamDisplay();
+    updateShopUI();
+    
+    // 重置结束页面显示
+    if($("#endCustomers")) $("#endCustomers").textContent = "0";
+    if($("#endCoins")) $("#endCoins").textContent = "$0";
+    if($("#endSatisfaction")) $("#endSatisfaction").textContent = "0%";
+    if($("#endSatisfactionBar")) $("#endSatisfactionBar").style.width = "0%";
+    
+    // 重置商店按钮
+    const btnOpenShop = document.getElementById('btnOpenShop');
+    const btnContinue = document.getElementById('btnContinue');
+    if(btnOpenShop) btnOpenShop.style.display = 'none';
+    if(btnContinue) btnContinue.className = btnContinue.className.replace('col-span-2', 'col-span-3');
+    
+    // 重置游戏页面按钮
+    if(btnNextDay) btnNextDay.style.display = "";
+    
+    console.log("游戏已完全重置");
+}
+    
+const btnExit = $("#btnExit");
+if(btnExit){
+  btnExit.addEventListener('click', ()=>{
+    // 先弹出确认对话框，根据用户选择执行操作
+    if(confirm("确定要退出游戏并重置所有进度吗？\n\n所有金币、团队成员和进度都将被清空！")) {
+        // 用户点击"确定"：重置游戏
+        resetGame();
+
+        // 返回开始页面
+        startPage.style.display = 'block';
+        gamePage.style.display = 'none';
+        endPage.style.display = 'none';
+        shopPage.style.display = 'none';
+        playMusic('start');
+
+        toast("🎮 游戏进度已清空，重新开始！");
+    } else {
+        // 用户点击"取消"：什么都不做，或者给一个提示
+        toast("❌ 已取消重置操作");
+        // 或者可以停留在当前页面
+        // startPage.style.display = 'none';
+        // gamePage.style.display = 'none';
+        // endPage.style.display = 'block'; // 保持结算页面
+    }
+  });
+}
+    
+    function updateEndPageStats() {
+      const level = Math.floor(dayStats.totalCoins / 50) + 1;
+      const levelProgress = (dayStats.totalCoins % 50) / 50 * 100;
+      const nextLevelNeeded = 50 - (dayStats.totalCoins % 50);
+      
+      if($("#endCustomers")) $("#endCustomers").textContent = dayStats.customersServed;
+      if($("#endCoins")) $("#endCoins").textContent = "$" + dayStats.totalCoins;
+      if($("#endSatisfaction")) $("#endSatisfaction").textContent = dayStats.satisfactionRate + "%";
+
+      if($("#endSatisfactionBar")) {
+          $("#endSatisfactionBar").style.width = "0%";
+      }
+      setTimeout(() => {
+          if($("#endSatisfactionBar")) {
+              $("#endSatisfactionBar").style.width = dayStats.satisfactionRate + "%";
+          }
+      }, 300);
+
+     // ★★★ 修改：第二天就显示商店按钮（现在从第1天开始，所以第1天结束后显示）
+    const btnOpenShop = document.getElementById('btnOpenShop');
+    if (btnOpenShop) {
+        if (day >= 1) { // 这里保持>=1，因为现在从第1天开始
+            btnOpenShop.style.display = 'block';
+        } else {
+            btnOpenShop.style.display = 'none';
+        }
+    }
+
+// ★★★ 修改：调整继续按钮布局
+    const btnContinue = document.getElementById('btnContinue');
+    if (btnContinue) {
+        if (day >= 1) { // 这里保持>=1，因为现在从第1天开始
+            btnContinue.className = btnContinue.className.replace('col-span-3', 'col-span-2');
+        } else {
+            btnContinue.className = btnContinue.className.replace('col-span-2', 'col-span-3');
+        }
+    }
+
+let message = "做得不错！";
+if(dayStats.satisfactionRate >= 90) message = "太棒了！米其林三星水准！";
+else if(dayStats.satisfactionRate >= 70) message = "很棒！顾客们很喜欢！";
+else if(dayStats.customersServed < 2) message = "生意有点冷清，明天加油！";
+
+// ★★★ 修改：第一天提示语 ★★★
+if (day === 1) {
+    message += " 商店已开放！";
+}
+
+if($("#endMessage")) $("#endMessage").textContent = message;
+    }
+
+    window.addEventListener('load', ()=>{
+          initGrill();
+          
+          const overlay = document.getElementById('click-overlay');
+          const startAudio = document.getElementById('bgm-start');
+
+          function startAudioContext() {
+              if(startAudio) {
+                  startAudio.volume = 0.5;
+                  startAudio.play().catch(e => console.log("播放失败", e));
+              }
+              if(overlay) {
+                  overlay.style.transition = "opacity 0.3s";
+                  overlay.style.opacity = "0";
+                  setTimeout(() => overlay.remove(), 300);
+              }
+          }
+
+          if(overlay) {
+              overlay.addEventListener('click', startAudioContext);
+          }
+          
+          document.body.addEventListener('click', () => {
+              if(startAudio && startAudio.paused) {
+                  startAudioContext();
+              }
+          }, { once: true });
+        });
+    document.body.addEventListener('click', ()=>{
+        if(startPage.style.display !== 'none' && bgmStart.paused) {
+            playMusic('start');
+        }
+    }, {once:true});
+
+    const instructionModal = document.getElementById('instructionModal')
+    const showInstruction = document.getElementById('showInstruction')
+    const closeInstruction = document.getElementById('closeInstruction')
+
+    if(showInstruction) showInstruction.addEventListener('click', ()=> instructionModal.style.display = 'flex');
+    if(closeInstruction) closeInstruction.addEventListener('click', ()=> instructionModal.style.display = 'none');
+    if(instructionModal) instructionModal.addEventListener('click',(e)=>{ if(e.target===instructionModal) instructionModal.style.display='none'; });
+  </script>
+
+  <script>
+   // 更新团队显示函数
+function updateTeamDisplay() {
+  const teamGrid = document.getElementById('teamGrid');
+  if (!teamGrid) return;
+  
+  const ownedUpgrades = Object.values(upgrades).filter(u => u.owned);
+  
+  if (ownedUpgrades.length === 0) {
+    teamGrid.innerHTML = `
+      <div class="col-span-3 text-center py-6 text-gray-400">
+        <span class="iconify inline-block text-4xl mb-2" data-icon="mdi:account-question"></span>
+        <div class="text-sm">尚未招募团队成员</div>
+        <div class="text-xs mt-1">完成一天营业后可在商店招募</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // 团队成员图片映射
+  const teamImages = {
+    'tianyurong': 'tyr_sway.gif',
+    'wanjiang': 'wj_sway.gif', 
+    'cuiyuankao': 'cyk_sway.gif',
+    'luoke': 'lk_sway.gif',
+    'maoyuxia': 'myx_sway.gif'
+  };
+  
+  teamGrid.innerHTML = ownedUpgrades.map(u => {
+    const imageFile = teamImages[u.id] || 'default.png';
+    return `
+      <div class="team-member-card owned">
+        <img src="${imageFile}" alt="${u.name}" class="team-member-image" 
+             onerror="this.src='default.png'">
+        <div class="team-member-name">${u.name}</div>
+        <div class="team-member-desc">${u.desc}</div>
+        <div class="team-member-skill text-xs text-green-600 font-bold mt-1">${u.skill}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// 在关键位置调用更新函数
+// 在 buyUpgrade 函数中（大约第 750 行）添加：
+window.buyUpgrade = function(id) {
+    const u = upgrades[id];
+    if(!u || u.owned || coins < u.price) return;
+    
+    coins -= u.price;
+    u.owned = true;
+    
+    playMusic('game'); 
+    toast(`🎁 成功招募：${u.name}`);
+    updateShopUI();
+    updateHUD();
+    updateTeamDisplay(); // 新增这行
+}
+
+// 在游戏页面显示时（大约第 830 行）添加：
+startGameBtn.addEventListener('click', ()=>{
+    startPage.style.display = 'none';
+    gamePage.style.display = 'block';
+    endPage.style.display = 'none';
+    shopPage.style.display = 'none';
+    playMusic('game'); 
+    setTimeout(()=>{ 
+        initGrill(); 
+        updateTeamDisplay(); // 新增这行
+    }, 300);
+    isShopOpen = false; 
+     updateBusinessButtons();
+    if(btnNextDay) btnNextDay.style.display = ""; 
+    toast("👆 请点击上方'开始营业'按钮");
+});
+</script>
+
+</body>
+</html>
